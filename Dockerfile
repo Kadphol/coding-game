@@ -1,12 +1,25 @@
-# ---- Build Stage ----
-FROM oven/bun:1.1.13 as build
-WORKDIR /app
-COPY . .
-RUN bun install
+# Build stage
+FROM oven/bun:latest AS builder
 
-# ---- Run Stage ----
-FROM oven/bun:1.1.13 as run
 WORKDIR /app
-COPY --from=build /app /app
-EXPOSE 3000
-CMD ["bun", "run", "src/index.ts"]
+
+# Copy package files first for better caching
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+
+# Copy rest of the files
+COPY . ./
+
+# Build the binary
+RUN bun build src/index.ts --compile --outfile server
+
+# Final stage
+FROM builder
+
+WORKDIR /app
+
+# Copy only the compiled binary
+COPY --from=builder /app/server ./server
+
+# Run the binary
+CMD ["./server"]
