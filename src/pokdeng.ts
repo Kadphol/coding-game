@@ -57,18 +57,17 @@ export function pokDengDecision(playHands: Card[][]): ('hit' | 'stand')[] {
     if (isPok(value)) {
       return 'stand'
     }
-    return 'hit'
 
-    // if (
-    //   canBecomeTong(cards) ||
-    //   canBecomeSamLueang(cards) ||
-    //   canBecomeFlush(cards) ||
-    //   canBecomeStraight(cards)
-    // ) {
-    //   return 'hit'
-    // }
+    if (
+      canBecomeTong(cards) ||
+      canBecomeSamLueang(cards) ||
+      canBecomeFlush(cards) ||
+      canBecomeStraight(cards)
+    ) {
+      return 'hit'
+    }
 
-    // return value >= 6 ? 'stand' : 'hit'
+    return value >= 6 ? 'stand' : 'hit'
   })
 }
 
