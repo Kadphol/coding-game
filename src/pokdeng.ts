@@ -57,23 +57,86 @@ export function pokDengDecision(playHands: Card[][]): ('hit' | 'stand')[] {
     if (isPok(value)) {
       return 'stand'
     }
+    return 'hit'
 
-    if (
-      canBecomeTong(cards) ||
-      canBecomeSamLueang(cards) ||
-      canBecomeFlush(cards) ||
-      canBecomeStraight(cards)
-    ) {
-      return 'hit'
-    }
+    // if (
+    //   canBecomeTong(cards) ||
+    //   canBecomeSamLueang(cards) ||
+    //   canBecomeFlush(cards) ||
+    //   canBecomeStraight(cards)
+    // ) {
+    //   return 'hit'
+    // }
 
-    return value >= 6 ? 'stand' : 'hit'
+    // return value >= 6 ? 'stand' : 'hit'
   })
 }
 
+function getFullDeck(): Card[] {
+  const deck: Card[] = []
+  const suites = ['hearts', 'diamonds', 'clubs', 'spades']
+  for (const suite of suites) {
+    for (let number = 1; number <= 13; number++) {
+      deck.push({ number, suite })
+    }
+  }
+  return deck
+}
+
+function isCardEqual(a: Card, b: Card): boolean {
+  return a.number === b.number && a.suite === b.suite
+}
+
 export function pokDengDecisionGame2(playHands: Card[][]): ('hit' | 'stand')[] {
-  // Placeholder: currently uses same logic as normal, but can be extended to use knownHands
-  return pokDengDecision(playHands)
+  // Flatten all playHands to get used cards
+  const usedCards: Card[] = playHands.flat()
+  const fullDeck = getFullDeck()
+  // Remove used cards from deck
+  const remainingDeck = fullDeck.filter(
+    (deckCard) => !usedCards.some((used) => isCardEqual(deckCard, used))
+  )
+
+  return playHands.map((cards) => {
+    const value = getHandValue(cards)
+    if (isPok(value)) {
+      return 'stand'
+    }
+    // Calculate if any special hand is still possible
+    let canHitSpecial = false
+    // Tong: need a third card matching number
+    if (!canHitSpecial && canBecomeTong(cards)) {
+      const needed = cards[0].number
+      canHitSpecial = remainingDeck.some((card) => card.number === needed)
+    }
+    // Sam Lueang: need a third face card
+    if (!canHitSpecial && canBecomeSamLueang(cards)) {
+      canHitSpecial = remainingDeck.some(
+        (card) => card.number >= 11 && card.number <= 13
+      )
+    }
+    // Flush: need a third matching suite
+    if (!canHitSpecial && canBecomeFlush(cards)) {
+      const needed = cards[0].suite
+      canHitSpecial = remainingDeck.some((card) => card.suite === needed)
+    }
+    // Straight: need a third card to form a valid straight
+    if (!canHitSpecial && canBecomeStraight(cards)) {
+      const nums = cards.map((c) => c.number).sort((a, b) => a - b)
+      let neededNum: number | null = null
+      // Ace is only low
+      if (nums[0] === 1 && nums[1] === 2) neededNum = 3
+      else if (nums[1] - nums[0] === 1 && nums[0] !== 1) {
+        // [x, x+1] -> need x-1 or x+2 (but only if in 1-13)
+        if (nums[0] > 1) neededNum = nums[0] - 1
+        else if (nums[1] < 13) neededNum = nums[1] + 1
+      }
+      if (neededNum && neededNum >= 1 && neededNum <= 13) {
+        canHitSpecial = remainingDeck.some((card) => card.number === neededNum)
+      }
+    }
+    if (canHitSpecial) return 'hit'
+    return value >= 6 ? 'stand' : 'hit'
+  })
 }
 
 export async function pokDengHandler(c: Context) {
