@@ -71,9 +71,7 @@ export function pokDengDecision(playHands: Card[][]): ('hit' | 'stand')[] {
   })
 }
 
-export function pokDengDecisionWithKnownHands(
-  playHands: Card[][]
-): ('hit' | 'stand')[] {
+export function pokDengDecisionGame2(playHands: Card[][]): ('hit' | 'stand')[] {
   // Placeholder: currently uses same logic as normal, but can be extended to use knownHands
   return pokDengDecision(playHands)
 }
@@ -82,7 +80,7 @@ export async function pokDengHandler(c: Context) {
   const body = await c.req.json<PokDengRequest>()
   let decisions: ('hit' | 'stand')[]
   if (body.gameType === 2) {
-    decisions = pokDengDecisionWithKnownHands(body.playHands)
+    decisions = pokDengDecisionGame2(body.playHands)
   } else {
     decisions = pokDengDecision(body.playHands)
   }
