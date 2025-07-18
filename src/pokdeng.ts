@@ -84,5 +84,5 @@ export async function pokDengHandler(c: Context) {
   } else {
     decisions = pokDengDecision(body.playHands)
   }
-  return c.json({ decisions })
+  return c.json(decisions)
 }
